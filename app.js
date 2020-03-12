@@ -138,7 +138,8 @@ var uiContorller = (function() {
         expenseContainer : "expenses__list",
         deleteItemBtn: "item__delete--btn",
         container: "container",
-        expPercentLabel: "item__percentage"
+        expPercentLabel: "item__percentage",
+        addErrorMessage: "add__error__message"
     }
 
     var nodeListForEach = function(fields, callback) {
@@ -180,6 +181,10 @@ var uiContorller = (function() {
                     cur.textContent = '---';
                 }
             });
+        },
+
+        displayErrorMessage : function(err) {
+            document.querySelector('.' + DOMStrings.addErrorMessage).innerText = err;
         },
 
         addItemList: function (item, type, sum) {
@@ -226,14 +231,15 @@ var uiContorller = (function() {
 
 var appController = (function(budgetCtrl, uiCtrl) {
     var Dom = uiCtrl.getDomStrings();
+    var startsWithAlphabetsOnly = /[a-zA-Z]/;
     var initDefaultValues = function() {
         uiCtrl.displayBudget(0);
         uiCtrl.displayIncome(0);
         uiCtrl.displayExpense(0, 0);
-
     }
     var setupEventListners = function() {
-        document.querySelector('.add__btn').addEventListener('click', addItem);
+        // adding event to addbtn
+        document.querySelector('.' + Dom.addBtn).addEventListener('click', addItem);
         document.addEventListener('keypress', function(e) {
             if (e.code === 13 || e.which === 13) {
                 addItem();
@@ -241,8 +247,6 @@ var appController = (function(budgetCtrl, uiCtrl) {
         })
 
         document.querySelector('.' + Dom.container).addEventListener('click', deleteItem);
-        
-        
     }
 
     //create events.
@@ -255,17 +259,17 @@ var appController = (function(budgetCtrl, uiCtrl) {
         input = uiCtrl.getInput();
         /*2. add item to the budget controller.
         3. calculate the budget */
-
-        newItem = budgetCtrl.addItem(input.description, parseFloat(input.value), input.type);
-        sum = input.type === 'exp' ? budgetCtrl.getExpense() : budgetCtrl.getIncome();
-        uiCtrl.addItemList(newItem, input.type, sum);
-        uiCtrl.clearFields();
-        // 4. update the uibudget.
-        updateBudget();
-        //5. update percentages
-        updatePercentages();
-
-
+        if (validateItem(input)) {
+            newItem = budgetCtrl.addItem(input.description, parseFloat(input.value), input.type);
+            sum = input.type === 'exp' ? budgetCtrl.getExpense() : budgetCtrl.getIncome();
+            uiCtrl.addItemList(newItem, input.type, sum);
+            uiCtrl.clearFields();
+            // 4. update the uibudget.
+            updateBudget();
+            //5. update percentages
+            updatePercentages();
+            uiCtrl.displayErrorMessage("");
+        }
     }
 
     var updateBudget = function() {
@@ -273,7 +277,6 @@ var appController = (function(budgetCtrl, uiCtrl) {
         uiCtrl.displayBudget(budgetCtrl.getBudget());
         uiCtrl.displayIncome(budgetCtrl.getIncome());
         uiCtrl.displayExpense(budgetCtrl.getExpense(), budgetCtrl.getExpPercentage());
-
     }
 
     var updatePercentages = function() {
@@ -296,8 +299,21 @@ var appController = (function(budgetCtrl, uiCtrl) {
         updateBudget();
         updatePercentages();
 
+    }
 
-       
+    var validateItem = function(e) {
+        console.log("validation started" + e);
+        try {
+            if (e.description === "") throw "Description should not be empty";
+            if (!startsWithAlphabetsOnly.test(e.description.charAt(0))) throw "Description should starts with alphabets only";
+            if (isNaN(parseFloat(e.value))) throw "enter valid number";
+        }
+        catch(e) {
+            uiCtrl.displayErrorMessage(e);
+            console.log("catched error----" + e);
+            return false;
+        }
+        return true;
     }
 
     return {

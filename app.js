@@ -139,7 +139,8 @@ var uiContorller = (function() {
         deleteItemBtn: "item__delete--btn",
         container: "container",
         expPercentLabel: "item__percentage",
-        addErrorMessage: "add__error__message"
+        addErrorMessage: "add__error__message",
+        budgetTitleMonth: "budget__title--month"
     }
 
     var nodeListForEach = function(fields, callback) {
@@ -156,6 +157,11 @@ var uiContorller = (function() {
                 value : document.getElementsByClassName('add__value')[0].value,
                 type : document.getElementsByClassName('add__type')[0].value
             };
+        },
+
+        displayBudgetTitleMonth : function(str) {
+            var d = new Date();
+            document.querySelector('.' + DOMStrings.budgetTitleMonth).innerText = str;
         },
 
         displayBudget : function(b) {
@@ -232,11 +238,16 @@ var uiContorller = (function() {
 var appController = (function(budgetCtrl, uiCtrl) {
     var Dom = uiCtrl.getDomStrings();
     var startsWithAlphabetsOnly = /[a-zA-Z]/;
+    const monthNames = ["January", "February", "March", "April", "May", "June",
+                        "July", "August", "September", "October", "November", "December"];
+
     var initDefaultValues = function() {
         uiCtrl.displayBudget(0);
         uiCtrl.displayIncome(0);
         uiCtrl.displayExpense(0, 0);
+        uiCtrl.displayBudgetTitleMonth(getBudgetTitleMonth());
     }
+
     var setupEventListners = function() {
         // adding event to addbtn
         document.querySelector('.' + Dom.addBtn).addEventListener('click', addItem);
@@ -252,10 +263,9 @@ var appController = (function(budgetCtrl, uiCtrl) {
     //create events.
     var addItem = function() {
         var input, newItem, sum;
-        
         /*
             1. get input from ui
-                    */
+        */
         input = uiCtrl.getInput();
         /*2. add item to the budget controller.
         3. calculate the budget */
@@ -314,6 +324,11 @@ var appController = (function(budgetCtrl, uiCtrl) {
             return false;
         }
         return true;
+    }
+
+    var getBudgetTitleMonth = function() {
+        var d = new Date();
+        return monthNames[d.getMonth()] + " " + d.getFullYear();
     }
 
     return {
